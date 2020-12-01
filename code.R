@@ -5,6 +5,8 @@ library(jsonlite)
 library(lubridate)
 library(zoo)
 library(ggmap)
+library(gganimate)
+library(gifski)
 
 #################################################
 # Read and massage locations data
@@ -34,20 +36,35 @@ italy = get_map(location = c(lon = 11, lat = 43.5), zoom = 7, maptype = "roadmap
 #------------------
 # Plot location points
 #------------------
-ggmap(italy) + 
+
+locations_animation = ggmap(italy) + 
   geom_point(
     data = locations, 
-    aes(x = locations$lon, y = locations$lat, color = locations$date), 
-    alpha = 0.5) + 
+    aes(x = lon, y = lat, color = date, size = 10), 
+    alpha = 0.5
+  ) + 
   labs(
     title = "Journey Through Italy",
-    subtitle = "Location History Data Points from 2019-09-15 to 2019-09-28",
-    color = "Date") +
+    subtitle = "{frame_time}"
+  ) +
   theme(
-    legend.position = "right",
+    legend.position = "none",
     axis.title.x=element_blank(),
     axis.text.x=element_blank(),
     axis.ticks.x=element_blank(),
     axis.title.y=element_blank(),
     axis.text.y=element_blank(),
-    axis.ticks.y=element_blank())
+    axis.ticks.y=element_blank(),
+  ) +
+  transition_time(locations$time)
+  + shadow_mark(past = TRUE, alpha = 0.5, color = 'black', size = 5)
+
+animate(
+  locations_animation, 
+  duration = 10,
+  width = 500, 
+  height = 500, 
+  renderer = gifski_renderer()
+)
+
+anim_save("locations.gif", path = "~/Developer/italy-location")
